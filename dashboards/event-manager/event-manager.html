@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Manager Dashboard - BPMS</title>
+    <link rel="icon" type="image/png" href="../../public/bpms_logo.png">
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="event-manager.css">
+</head>
+<body>
+    <!-- Event Creation Modal (Non-dismissible) -->
+    <div id="eventCreationModal" class="modal event-creation-modal hidden" role="dialog" aria-labelledby="eventCreationTitle" aria-hidden="true">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h3 id="eventCreationTitle" class="modal-title">Create Your First Event</h3>
+            <p class="modal-message">Please create an event to get started with managing your beauty pageant.</p>
+            
+            <div id="eventCreationSuccess" class="success-message">
+                Event created successfully! Loading dashboard...
+            </div>
+
+            <form id="eventCreationForm" class="modal-form" novalidate>
+                <div class="form-group">
+                    <label for="eventName" class="form-label">Event Name</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        <input
+                            type="text"
+                            id="eventName"
+                            name="eventName"
+                            class="form-input"
+                            placeholder="Enter event name"
+                            required
+                            aria-required="true"
+                            minlength="3"
+                            maxlength="100"
+                        >
+                    </div>
+                    <span class="error-message" id="eventNameError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventDate" class="form-label">Event Date</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                        <input
+                            type="date"
+                            id="eventDate"
+                            name="eventDate"
+                            class="form-input"
+                            required
+                            aria-required="true"
+                        >
+                    </div>
+                    <span class="error-message" id="eventDateError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventVenue" class="form-label">Venue/Location</label>
+                    <div class="input-wrapper">
+                        <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                            <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <input
+                            type="text"
+                            id="eventVenue"
+                            name="eventVenue"
+                            class="form-input"
+                            placeholder="Enter venue or location"
+                            required
+                            aria-required="true"
+                            minlength="5"
+                            maxlength="200"
+                        >
+                    </div>
+                    <span class="error-message" id="eventVenueError"></span>
+                </div>
+
+                <button type="submit" class="submit-button" id="createEventButton">Create Event</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Layout -->
+    <div id="mainDashboard" class="dashboard-wrapper hidden">
+        <!-- Left Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo-container">
+                    <img src="../../public/bpms_logo.png" alt="BPMS Logo" class="sidebar-logo-image">
+                    <div class="sidebar-logo-text">
+                        <h1 class="sidebar-logo-title">BPMS</h1>
+                        <p class="sidebar-logo-subtitle">Beauty Pageant Management System</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-nav="dashboard">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="9" x2="15" y2="9"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-nav="manage-organizers">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    Manage Organizers
+                </a>
+                <a href="#" class="nav-item" data-nav="manage-activities">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>
+                    </svg>
+                    Manage Activities
+                </a>
+                <a href="#" class="nav-item" data-nav="manage-rounds">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Manage Rounds
+                </a>
+                <a href="#" class="nav-item" data-nav="manage-segments">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="3" x2="9" y2="21"/>
+                        <line x1="3" y1="9" x2="21" y2="9"/>
+                    </svg>
+                    Manage Segments and Criteria
+                </a>
+                <a href="#" class="nav-item" data-nav="manage-awards">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                    </svg>
+                    Manage Awards
+                </a>
+                <a href="#" class="nav-item" data-nav="register-contestant">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="8.5" cy="7" r="4"/>
+                        <line x1="20" y1="8" x2="20" y2="14"/>
+                        <line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
+                    Register Contestant
+                </a>
+                <a href="#" class="nav-item" data-nav="register-judge">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                        <line x1="20" y1="8" x2="20" y2="14"/>
+                        <line x1="23" y1="11" x2="17" y2="11"/>
+                    </svg>
+                    Register Judge
+                </a>
+                <a href="#" class="nav-item" data-nav="result-panel">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    Result Panel
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="#" class="nav-item" data-nav="settings">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                    </svg>
+                    Settings
+                </a>
+                <a href="#" class="nav-item" id="logoutButton">
+                    <svg class="nav-item-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Logout
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <div class="main-content-wrapper">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-role">Event Manager</div>
+                <div class="header-icons">
+                    <div class="header-icon" id="notificationIcon" aria-label="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                        </svg>
+                        <span class="notification-badge"></span>
+                    </div>
+                    <div class="header-icon" id="profileIcon" aria-label="Profile">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="dashboard-content">
+                <!-- Dashboard View (default) -->
+                <div id="dashboardView" class="dashboard-view">
+                    <!-- Enhanced Event Overview -->
+                    <div class="event-info-card">
+                        <div class="event-overview-header">
+                            <div>
+                                <h1 class="event-title" id="dashboardEventName">Event Name</h1>
+                                <div class="days-until-event" id="daysUntilEvent">
+                                    <strong id="daysCount">--</strong> days until event
+                                </div>
+                            </div>
+                            <div>
+                                <span class="event-status-badge active" id="eventStatusBadge">Active</span>
+                            </div>
+                        </div>
+                        <div class="event-details">
+                            <div class="event-detail-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <span id="dashboardEventDate">Date</span>
+                            </div>
+                            <div class="event-detail-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span id="dashboardEventVenue">Venue</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Enhanced Statistics Grid -->
+                    <div class="quick-stats" id="statisticsGrid">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Contestants</div>
+                            <div class="stat-value" id="statContestants">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Judges</div>
+                            <div class="stat-value" id="statJudges">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Active Judges</div>
+                            <div class="stat-value" id="statActiveJudges">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Registered Judges</div>
+                            <div class="stat-value" id="statRegisteredJudges">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Rounds</div>
+                            <div class="stat-value" id="statRounds">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Segments</div>
+                            <div class="stat-value" id="statSegments">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Awards</div>
+                            <div class="stat-value" id="statAwards">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Organizers</div>
+                            <div class="stat-value" id="statOrganizers">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Completion Rate</div>
+                            <div class="stat-value" id="statCompletionRate">0%</div>
+                        </div>
+                    </div>
+
+                    <!-- Three Column Layout -->
+                    <div class="dashboard-grid">
+                        <!-- Main Column -->
+                        <div class="dashboard-main-column">
+                            <!-- Progress Checklist -->
+                            <div class="progress-checklist-card">
+                                <div class="progress-checklist-title">Event Setup Progress</div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-percentage" id="progressPercentage">0%</div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-item-label">
+                                        <span class="checklist-status incomplete" id="checkEventDetails">✗</span>
+                                        <span>Event Details</span>
+                                    </div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-item-label">
+                                        <span class="checklist-status incomplete" id="checkOrganizers">✗</span>
+                                        <span>Organizers Assigned</span>
+                                    </div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-item-label">
+                                        <span class="checklist-status incomplete" id="checkRounds">✗</span>
+                                        <span>Rounds Configured</span>
+                                    </div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-item-label">
+                                        <span class="checklist-status incomplete" id="checkSegments">✗</span>
+                                        <span>Segments & Criteria Set</span>
+                                    </div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-item-label">
+                                        <span class="checklist-status incomplete" id="checkAwards">✗</span>
+                                        <span>Awards Created</span>
+                                    </div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-item-label">
+                                        <span class="checklist-status incomplete" id="checkContestants">✗</span>
+                                        <span>Contestants Registered</span>
+                                    </div>
+                                </div>
+                                <div class="checklist-item">
+                                    <div class="checklist-item-label">
+                                        <span class="checklist-status incomplete" id="checkJudges">✗</span>
+                                        <span>Judges Assigned</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recent Registrations -->
+                            <div class="recent-registrations-card">
+                                <h2 class="section-title">Recent Registrations</h2>
+                                <div id="recentRegistrationsContainer">
+                                    <table class="data-table" id="recentRegistrationsTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Contestant Name</th>
+                                                <th>Registration Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="recentRegistrationsBody">
+                                            <tr>
+                                                <td colspan="4" class="empty-state">
+                                                    <div class="empty-state-text">No recent registrations</div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Judge Status Overview -->
+                            <div class="judge-status-card">
+                                <h2 class="section-title">Judge Status Overview</h2>
+                                <div id="judgeStatusContainer">
+                                    <div class="empty-state">
+                                        <div class="empty-state-text">No judges assigned yet</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sidebar Column -->
+                        <div class="dashboard-sidebar-column">
+                            <!-- Activity Feed -->
+                            <div class="activity-feed-card">
+                                <div class="activity-feed-title">
+                                    <span>Recent Activity</span>
+                                    <button class="refresh-button" id="refreshActivityBtn" aria-label="Refresh">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="23 4 23 10 17 10"/>
+                                            <polyline points="1 20 1 14 7 14"/>
+                                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div id="activityFeedContainer">
+                                    <div class="empty-state">
+                                        <div class="empty-state-text">No recent activity</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Actions -->
+                            <div class="quick-actions-card">
+                                <div class="quick-actions-title">Quick Actions</div>
+                                <div class="quick-actions-grid">
+                                    <a href="#" class="quick-action-btn" data-action="register-contestant">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="8.5" cy="7" r="4"/>
+                                            <line x1="20" y1="8" x2="20" y2="14"/>
+                                            <line x1="23" y1="11" x2="17" y2="11"/>
+                                        </svg>
+                                        <span>Register Contestant</span>
+                                    </a>
+                                    <a href="#" class="quick-action-btn" data-action="register-judge">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                            <circle cx="12" cy="7" r="4"/>
+                                            <line x1="20" y1="8" x2="20" y2="14"/>
+                                            <line x1="23" y1="11" x2="17" y2="11"/>
+                                        </svg>
+                                        <span>Register Judge</span>
+                                    </a>
+                                    <a href="#" class="quick-action-btn" data-action="create-round">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12 6 12 12 16 14"/>
+                                        </svg>
+                                        <span>Create Round</span>
+                                    </a>
+                                    <a href="#" class="quick-action-btn" data-action="add-segment">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                            <line x1="9" y1="3" x2="9" y2="21"/>
+                                            <line x1="3" y1="9" x2="21" y2="9"/>
+                                        </svg>
+                                        <span>Add Segment</span>
+                                    </a>
+                                    <a href="#" class="quick-action-btn" data-action="create-award">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                                        </svg>
+                                        <span>Create Award</span>
+                                    </a>
+                                    <a href="#" class="quick-action-btn" data-action="view-results">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                        </svg>
+                                        <span>View Results</span>
+                                    </a>
+                                    <a href="#" class="quick-action-btn" data-action="export-data">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/>
+                                            <line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        <span>Export Data</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Upcoming Tasks -->
+                            <div class="upcoming-tasks-card">
+                                <h2 class="section-title">Upcoming Tasks</h2>
+                                <div id="upcomingTasksContainer">
+                                    <div class="empty-state">
+                                        <div class="empty-state-text">No upcoming tasks</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other Views (hidden by default, will be shown when navigating) -->
+                <div id="otherViews" class="other-views hidden">
+                    <!-- Content for other navigation items will be loaded here -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/dashboards/event-manager.js"></script>
+</body>
+</html>

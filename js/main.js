@@ -436,7 +436,7 @@ const BPMS = {
         const dashboardPath = roleMap[account.role] || 'event-manager';
         // Redirect to appropriate dashboard
         setTimeout(() => {
-            window.location.href = `dashboards/${dashboardPath}/index.html`;
+            window.location.href = `dashboards/${dashboardPath}/${dashboardPath}.html`; 
         }, 1500);
         
         // Show inline success message before redirect
