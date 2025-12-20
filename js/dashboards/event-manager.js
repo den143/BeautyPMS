@@ -1248,6 +1248,7 @@ const EventManagerDashboard = {
     openOrganizerModal() {
         const modal = document.getElementById('organizerModal');
         if (!modal) return;
+        this.setModalForAdd();
         modal.classList.remove('hidden');
         modal.setAttribute('aria-hidden', 'false');
         const email = document.getElementById('organizerEmail');
@@ -1319,28 +1320,43 @@ const EventManagerDashboard = {
             emailErr.textContent = 'Invalid email';
             return;
         }
-        if (pwdVal.length < 8) return;
         const event = this.state.activeEvent;
         const key = this.getOrganizersKey(event && event.id ? event.id : 'default');
         const list = this.loadOrganizersRaw(key);
-        if (list.some(o => o.email.toLowerCase() === emailVal.toLowerCase())) {
-            emailErr.textContent = 'Email already exists';
-            return;
+        const form = document.getElementById('organizerForm');
+        const mode = form ? form.getAttribute('data-mode') : 'add';
+        if (mode === 'add') {
+            if (pwdVal.length < 8) return;
+            if (list.some(o => o.email.toLowerCase() === emailVal.toLowerCase())) {
+                emailErr.textContent = 'Email already exists';
+                return;
+            }
+            const id = 'organizer_' + Date.now();
+            const obj = {
+                id,
+                email: emailVal,
+                password: 'hashed_password',
+                role: roleVal,
+                status: 'active',
+                created_at: new Date().toISOString(),
+                created_by: 'event_manager',
+                last_login: null,
+                password_changed: false,
+                event_id: event && event.id ? event.id : 'event_default'
+            };
+            list.push(obj);
+        } else {
+            const editId = this.state.editOrganizerId;
+            if (!editId) return;
+            if (list.some(o => o.email.toLowerCase() === emailVal.toLowerCase() && o.id !== editId)) {
+                emailErr.textContent = 'Email already exists';
+                return;
+            }
+            const obj = list.find(o => o.id === editId);
+            if (!obj) return;
+            obj.email = emailVal;
+            obj.role = roleVal;
         }
-        const id = 'organizer_' + Date.now();
-        const obj = {
-            id,
-            email: emailVal,
-            password: 'hashed_password',
-            role: roleVal,
-            status: 'active',
-            created_at: new Date().toISOString(),
-            created_by: 'event_manager',
-            last_login: null,
-            password_changed: false,
-            event_id: event && event.id ? event.id : 'event_default'
-        };
-        list.push(obj);
         localStorage.setItem(key, JSON.stringify(list));
         this.closeOrganizerModal();
         this.loadAndRenderOrganizers();
@@ -1499,7 +1515,76 @@ const EventManagerDashboard = {
 
 
     editOrganizer(id) {
-        alert('Edit organizer coming soon');
+        this.openEditOrganizer(id);
+    },
+
+    openEditOrganizer(id) {
+        const event = this.state.activeEvent;
+        const key = this.getOrganizersKey(event && event.id ? event.id : 'default');
+        const list = this.loadOrganizersRaw(key);
+        const obj = list.find(o => o.id === id);
+        if (!obj) return;
+        this.setModalForEdit(obj);
+        const modal = document.getElementById('organizerModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        const email = document.getElementById('organizerEmail');
+        if (email) email.focus();
+    },
+
+    setModalForAdd() {
+        this.state.editOrganizerId = null;
+        const title = document.getElementById('organizerModalTitle');
+        const form = document.getElementById('organizerForm');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        const pwdInput = document.getElementById('organizerPassword');
+        const pwdGroup = pwdInput ? pwdInput.closest('.form-group') : null;
+        const genBtn = document.getElementById('generatePassword');
+        const toggleBtn = document.getElementById('togglePassword');
+        const strength = document.getElementById('passwordStrength');
+        const sendCreds = document.getElementById('sendCredentials');
+        const sendGroup = sendCreds ? sendCreds.closest('.form-group') : null;
+        if (title) title.textContent = 'Add Organizer';
+        if (form) form.setAttribute('data-mode', 'add');
+        if (submitBtn) submitBtn.textContent = 'Add Organizer';
+        if (pwdGroup) pwdGroup.style.display = '';
+        if (genBtn) genBtn.style.display = '';
+        if (toggleBtn) toggleBtn.style.display = '';
+        if (strength) strength.style.display = '';
+        if (sendGroup) sendGroup.style.display = '';
+        const role = document.getElementById('organizerRole');
+        const email = document.getElementById('organizerEmail');
+        if (role) role.value = '';
+        if (email) email.value = '';
+        if (pwdInput) pwdInput.value = '';
+    },
+
+    setModalForEdit(obj) {
+        this.state.editOrganizerId = obj.id;
+        const title = document.getElementById('organizerModalTitle');
+        const form = document.getElementById('organizerForm');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        const pwdInput = document.getElementById('organizerPassword');
+        const pwdGroup = pwdInput ? pwdInput.closest('.form-group') : null;
+        const genBtn = document.getElementById('generatePassword');
+        const toggleBtn = document.getElementById('togglePassword');
+        const strength = document.getElementById('passwordStrength');
+        const sendCreds = document.getElementById('sendCredentials');
+        const sendGroup = sendCreds ? sendCreds.closest('.form-group') : null;
+        if (title) title.textContent = 'Edit Organizer';
+        if (form) form.setAttribute('data-mode', 'edit');
+        if (submitBtn) submitBtn.textContent = 'Save Changes';
+        if (pwdGroup) pwdGroup.style.display = 'none';
+        if (genBtn) genBtn.style.display = 'none';
+        if (toggleBtn) toggleBtn.style.display = 'none';
+        if (strength) strength.style.display = 'none';
+        if (sendGroup) sendGroup.style.display = 'none';
+        const role = document.getElementById('organizerRole');
+        const email = document.getElementById('organizerEmail');
+        if (role) role.value = obj.role || '';
+        if (email) email.value = obj.email || '';
+        if (pwdInput) pwdInput.value = '';
     },
 
     /**
