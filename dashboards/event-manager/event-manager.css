@@ -556,6 +556,16 @@ body {
     border-bottom: 1px solid var(--color-border);
 }
 
+.data-table th:last-child,
+.data-table td:last-child {
+    white-space: nowrap;
+    min-width: 320px;
+}
+
+.recent-registrations-card {
+    overflow-x: auto;
+}
+
 .data-table tr:hover {
     background-color: var(--color-background);
 }
@@ -596,7 +606,8 @@ body {
 .row-actions {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
+    flex-wrap: nowrap;
 }
 
 .row-actions .table-action-btn {
@@ -687,6 +698,38 @@ body {
 
 .organizer-modal .modal-content {
     max-width: 640px;
+}
+
+.activity-modal .modal-content {
+    max-width: 720px;
+    max-height: 80vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+.activity-modal .modal-form {
+    text-align: left;
+    padding-bottom: var(--spacing-lg);
+}
+
+.activity-modal .modal-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--color-white);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-border);
+    z-index: 2;
+}
+
+.activity-modal .modal-form {
+    padding-bottom: calc(var(--spacing-xl) + 64px);
 }
 
 .modal-actions {
@@ -918,6 +961,21 @@ body {
     display: none !important;
 }
 
+.error-message {
+    display: none;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    background-color: rgba(220, 38, 38, 0.08);
+    border: 1px solid var(--color-error);
+    border-radius: var(--radius-sm);
+    color: var(--color-error);
+    font-size: var(--font-size-sm);
+}
+
+.form-input.invalid {
+    border-color: var(--color-error);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .quick-stats {
@@ -928,4 +986,8 @@ body {
         flex-direction: column;
         gap: var(--spacing-sm);
     }
+}
+.activity-modal .modal-body {
+    flex: 1;
+    padding-bottom: var(--spacing-xl);
 }

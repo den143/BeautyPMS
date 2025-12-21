@@ -1062,32 +1062,25 @@ const EventManagerDashboard = {
                 this.renderManageOrganizersView();
                 break;
             case 'manage-activities':
-                console.log('Navigate to: Manage Activities');
-                // TODO: Load manage activities content
+                this.renderManageActivitiesView();
                 break;
             case 'manage-rounds':
-                console.log('Navigate to: Manage Rounds');
-                // TODO: Load manage rounds content
+                this.renderSectionView('Manage Rounds', 'Configure competition rounds');
                 break;
             case 'manage-segments':
-                console.log('Navigate to: Manage Segments and Criteria');
-                // TODO: Load manage segments content
+                this.renderSectionView('Manage Segments and Criteria', 'Define segments and scoring criteria');
                 break;
             case 'manage-awards':
-                console.log('Navigate to: Manage Awards');
-                // TODO: Load manage awards content
+                this.renderSectionView('Manage Awards', 'Create and manage awards');
                 break;
             case 'register-contestant':
-                console.log('Navigate to: Register Contestant');
-                // TODO: Load register contestant form
+                this.renderSectionView('Register Contestant', 'Add and manage contestants');
                 break;
             case 'register-judge':
-                console.log('Navigate to: Register Judge');
-                // TODO: Load register judge form
+                this.renderSectionView('Register Judge', 'Add and manage judges');
                 break;
             case 'result-panel':
-                console.log('Navigate to: Result Panel');
-                // TODO: Load result panel content
+                this.renderSectionView('Result Panel', 'View results and rankings');
                 break;
             default:
                 console.log('Unknown navigation target:', navTarget);
@@ -1116,6 +1109,640 @@ const EventManagerDashboard = {
         if (this.elements.otherViews) {
             this.elements.otherViews.classList.remove('hidden');
         }
+    },
+
+    renderSectionView(title, subtitle) {
+        if (!this.elements.otherViews) return;
+        this.showOtherView(title);
+        const html = `
+            <section class="dashboard-view">
+              <div class="page-header">
+                <div>
+                  <h1 class="event-title">${title}</h1>
+                  <p class="page-subtitle">${subtitle}</p>
+                </div>
+              </div>
+              <div class="recent-registrations-card">
+                <h2 class="section-title">${title}</h2>
+                <div class="empty-state">
+                  <div class="empty-state-text">Content will be available soon</div>
+                </div>
+              </div>
+            </section>`;
+        this.elements.otherViews.innerHTML = html;
+    },
+
+    renderManageActivitiesView() {
+        if (!this.elements.otherViews) return;
+        this.showOtherView('manage-activities');
+        const html = `
+            <section id="manageActivitiesView" class="dashboard-view">
+              <div class="page-header">
+                <div>
+                  <h1 class="event-title">Manage Activities</h1>
+                  <p class="page-subtitle">Create, schedule, and update event activities</p>
+                </div>
+                <button id="addActivityBtn" class="submit-button">Add Activity</button>
+              </div>
+
+              <div class="filters-bar">
+                <input id="activitySearch" class="form-input" type="text" placeholder="Search title or venue">
+                <select id="filterActivityType" class="form-input form-select">
+                  <option value="">All Types</option>
+                  <option value="Photoshoot">Photoshoot</option>
+                  <option value="Rehearsal">Rehearsal</option>
+                  <option value="Briefing">Briefing</option>
+                  <option value="Dinner">Dinner</option>
+                  <option value="Main Event">Main Event</option>
+                  <option value="Custom">Custom</option>
+                </select>
+                <select id="filterActivityStatus" class="form-input form-select">
+                  <option value="">All Status</option>
+                  <option value="Planned">Planned</option>
+                  <option value="Confirmed">Confirmed</option>
+                  <option value="Rescheduled">Rescheduled</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+                <select id="sortActivityBy" class="form-input form-select">
+                  <option value="start_asc">Start Date ↑</option>
+                  <option value="start_desc">Start Date ↓</option>
+                </select>
+              </div>
+
+              <div class="recent-registrations-card">
+                <h2 class="section-title">Activities</h2>
+                <table class="data-table" id="activitiesTable">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th>Start</th>
+                      <th>End</th>
+                      <th>Venue</th>
+                      <th>Audience</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="activitiesTbody">
+                    <tr>
+                      <td colspan="8" class="empty-state">
+                        <div class="empty-state-text">No activities yet</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <div id="activityModal" class="modal activity-modal hidden" role="dialog" aria-labelledby="activityModalTitle" aria-hidden="true">
+              <div class="modal-overlay"></div>
+              <div class="modal-content">
+                <h3 id="activityModalTitle" class="modal-title">Add Activity</h3>
+                <div id="activityConflictWarning" class="error-message" style="display:none"></div>
+                <form id="activityForm" class="modal-form" novalidate>
+                  <div class="modal-body">
+                  <div class="form-group">
+                    <label for="activityType" class="form-label">Activity Type</label>
+                    <div class="input-wrapper">
+                      <select id="activityType" class="form-input form-select" required>
+                        <option value="">Select type</option>
+                        <option value="Photoshoot">Photoshoot</option>
+                        <option value="Rehearsal">Rehearsal</option>
+                        <option value="Briefing">Briefing</option>
+                        <option value="Dinner">Dinner</option>
+                        <option value="Main Event">Main Event</option>
+                        <option value="Custom">Custom</option>
+                      </select>
+                    </div>
+                    <div class="input-wrapper" id="activityTypeCustomWrapper" style="margin-top:0.5rem; display:none">
+                      <input id="activityTypeCustom" type="text" class="form-input" placeholder="Enter custom activity type">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="activityDescription" class="form-label">Description / Notes</label>
+                    <div class="input-wrapper">
+                      <textarea id="activityDescription" class="form-input" placeholder="Dress code, reminders, instructions" rows="3"></textarea>
+                    </div>
+                  </div>
+
+                  <div class="form-row-grid">
+                    <div class="form-group">
+                      <label for="activityStartDate" class="form-label">Start Date</label>
+                      <div class="input-wrapper">
+                        <input id="activityStartDate" type="date" class="form-input" required>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="activityStartTime" class="form-label">Start Time</label>
+                      <div class="input-wrapper">
+                        <input id="activityStartTime" type="time" class="form-input" required>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-row-grid">
+                    <div class="form-group">
+                      <label for="activityEndDate" class="form-label">End Date</label>
+                      <div class="input-wrapper">
+                        <input id="activityEndDate" type="date" class="form-input" required>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label for="activityEndTime" class="form-label">End Time</label>
+                      <div class="input-wrapper">
+                        <input id="activityEndTime" type="time" class="form-input" required>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="activityAddress" class="form-label">Address</label>
+                    <div class="input-wrapper">
+                      <input id="activityAddress" type="text" class="form-input" placeholder="Address" required>
+                    </div>
+                  </div>
+
+                  <div class="form-row-grid">
+                    <div class="form-group">
+                      <label for="activityStatus" class="form-label">Status</label>
+                      <div class="input-wrapper">
+                        <select id="activityStatus" class="form-input form-select" required>
+                          <option value="Planned">Planned</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Rescheduled">Rescheduled</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Cancelled">Cancelled</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Audience</label>
+                      <div class="input-wrapper">
+                        <label style="margin-right:1rem"><input id="audContestants" type="checkbox"> Contestants</label>
+                        <label><input id="audJudges" type="checkbox"> Judges</label>
+                      </div>
+                    </div>
+                  </div>
+                  </div>
+
+                  <div class="modal-actions">
+                    <button type="button" id="cancelActivity" class="submit-button secondary-button">Cancel</button>
+                    <button type="submit" class="submit-button">Save Activity</button>
+                  </div>
+                </form>
+              </div>
+            </div>`;
+        this.elements.otherViews.innerHTML = html;
+        this.attachManageActivitiesHandlers();
+        this.loadAndRenderActivities();
+    },
+
+    attachManageActivitiesHandlers() {
+        const addBtn = document.getElementById('addActivityBtn');
+        const modal = document.getElementById('activityModal');
+        const overlay = modal ? modal.querySelector('.modal-overlay') : null;
+        const cancelBtn = document.getElementById('cancelActivity');
+        const form = document.getElementById('activityForm');
+        const search = document.getElementById('activitySearch');
+        const filterType = document.getElementById('filterActivityType');
+        const filterStatus = document.getElementById('filterActivityStatus');
+        const sortBy = document.getElementById('sortActivityBy');
+        const typeSel = document.getElementById('activityType');
+        if (addBtn) addBtn.addEventListener('click', () => this.openActivityModal());
+        if (overlay) overlay.addEventListener('click', () => this.closeActivityModal());
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeActivityModal());
+        if (form) form.addEventListener('submit', (e) => this.handleActivitySubmit(e));
+        if (search) search.addEventListener('input', () => this.loadAndRenderActivities());
+        if (filterType) filterType.addEventListener('change', () => this.loadAndRenderActivities());
+        if (filterStatus) filterStatus.addEventListener('change', () => this.loadAndRenderActivities());
+        if (sortBy) sortBy.addEventListener('change', () => this.loadAndRenderActivities());
+        if (typeSel) typeSel.addEventListener('change', () => this.toggleCustomType());
+        const sd = document.getElementById('activityStartDate');
+        const st = document.getElementById('activityStartTime');
+        const ed = document.getElementById('activityEndDate');
+        const et = document.getElementById('activityEndTime');
+        const addrEl = document.getElementById('activityAddress');
+        const typeCustomEl = document.getElementById('activityTypeCustom');
+        const statusEl = document.getElementById('activityStatus');
+        [sd, st, ed, et].forEach(el => {
+            if (el) {
+                el.addEventListener('input', () => this.updateConflictWarning());
+                el.addEventListener('change', () => this.updateConflictWarning());
+                el.addEventListener('input', () => this.setFieldInvalid(el, false));
+                el.addEventListener('change', () => this.setFieldInvalid(el, false));
+            }
+        });
+        [addrEl, statusEl].forEach(el => {
+            if (el) {
+                el.addEventListener('input', () => this.setFieldInvalid(el, false));
+                el.addEventListener('change', () => this.setFieldInvalid(el, false));
+            }
+        });
+        if (typeSel) {
+            typeSel.addEventListener('change', () => {
+                this.setFieldInvalid(typeSel, false);
+                const custom = document.getElementById('activityTypeCustom');
+                if (custom) this.setFieldInvalid(custom, false);
+            });
+        }
+        const tbody = document.getElementById('activitiesTbody');
+        if (tbody) tbody.addEventListener('click', (e) => this.handleActivitiesTableClick(e));
+    },
+
+    openActivityModal() {
+        const modal = document.getElementById('activityModal');
+        if (!modal) return;
+        this.setActivityModalAdd();
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        const typeSel = document.getElementById('activityType');
+        if (typeSel) typeSel.focus();
+        this.updateConflictWarning();
+    },
+
+    closeActivityModal() {
+        const modal = document.getElementById('activityModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        const form = document.getElementById('activityForm');
+        if (form) form.reset();
+        const warn = document.getElementById('activityConflictWarning');
+        if (warn) { warn.style.display = 'none'; warn.textContent = ''; }
+    },
+
+    getActivitiesKey(eventId) {
+        return 'bpms_activities_' + eventId;
+    },
+
+    loadActivitiesRaw(key) {
+        const raw = localStorage.getItem(key);
+        try { return raw ? JSON.parse(raw) : []; } catch(e) { return []; }
+    },
+
+    loadAndRenderActivities() {
+        const event = this.state.activeEvent;
+        const key = this.getActivitiesKey(event && event.id ? event.id : 'default');
+        const list = this.loadActivitiesRaw(key);
+        const filtered = this.applyActivityFilters(list);
+        this.renderActivitiesTable(filtered);
+    },
+
+    applyActivityFilters(list) {
+        const search = document.getElementById('activitySearch');
+        const typeSel = document.getElementById('filterActivityType');
+        const statusSel = document.getElementById('filterActivityStatus');
+        const sortSel = document.getElementById('sortActivityBy');
+        let res = list.slice();
+        const s = search && search.value ? search.value.toLowerCase() : '';
+        if (s) res = res.filter(a => (a.title||'').toLowerCase().includes(s) || (a.address||'').toLowerCase().includes(s));
+        const t = typeSel && typeSel.value ? typeSel.value : '';
+        if (t) res = res.filter(a => a.type === t);
+        const st = statusSel && statusSel.value ? statusSel.value : '';
+        if (st) res = res.filter(a => a.status === st);
+        const sort = sortSel ? sortSel.value : 'start_asc';
+        res.sort((a,b) => {
+            const as = a.start ? new Date(a.start).getTime() : 0;
+            const bs = b.start ? new Date(b.start).getTime() : 0;
+            return sort === 'start_desc' ? bs - as : as - bs;
+        });
+        return res;
+    },
+
+    renderActivitiesTable(list) {
+        const tbody = document.getElementById('activitiesTbody');
+        if (!tbody) return;
+        if (!list || list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><div class="empty-state-text">No activities yet</div></td></tr>`;
+            return;
+        }
+        const rows = list.map(a => {
+            const statusClass = a.status === 'Confirmed' || a.status === 'Completed' ? 'approved' : (a.status === 'Rescheduled' ? 'pending' : (a.status === 'Cancelled' ? 'rejected' : ''));
+            const statusBadge = `<span class=\"status-badge ${statusClass}\">${a.status}</span>`;
+            const startStr = a.start ? new Date(a.start).toLocaleString() : '-';
+            const endStr = a.end ? new Date(a.end).toLocaleString() : '-';
+            const aud = `${a.audience && a.audience.contestants ? 'Contestants' : ''}${a.audience && a.audience.judges ? (a.audience && a.audience.contestants ? ', ' : '') + 'Judges' : ''}` || 'Event Manager';
+            return `
+              <tr data-id=\"${a.id}\">
+                <td>${a.title||'-'}</td>
+                <td>${a.type||'-'}</td>
+                <td>${statusBadge}</td>
+                <td>${startStr}</td>
+                <td>${endStr}</td>
+                <td>${a.venue||'-'}</td>
+                <td>${aud}</td>
+                <td>
+                  <div class=\"row-actions\">
+                    <button class=\"table-action-btn view\" data-action=\"edit\">Edit</button>
+                    <button class=\"table-action-btn view\" data-action=\"complete\">Mark Completed</button>
+                    <button class=\"table-action-btn view\" data-action=\"cancel\">Cancel</button>
+                  </div>
+                </td>
+              </tr>`;
+        }).join('');
+        tbody.innerHTML = rows;
+    },
+
+    handleActivitiesTableClick(e) {
+        const btn = e.target.closest('button');
+        const row = e.target.closest('tr');
+        if (!row || !btn) return;
+        const id = row.getAttribute('data-id');
+        const action = btn.getAttribute('data-action');
+        if (action === 'edit') this.openEditActivity(id);
+        else if (action === 'complete') this.updateActivityStatus(id, 'Completed');
+        else if (action === 'cancel') this.updateActivityStatus(id, 'Cancelled');
+    },
+
+    updateActivityStatus(id, status) {
+        const event = this.state.activeEvent;
+        const key = this.getActivitiesKey(event && event.id ? event.id : 'default');
+        const list = this.loadActivitiesRaw(key);
+        const a = list.find(x => x.id === id);
+        if (!a) return;
+        a.status = status;
+        a.updated_at = new Date().toISOString();
+        localStorage.setItem(key, JSON.stringify(list));
+        this.loadAndRenderActivities();
+    },
+
+    handleActivitySubmit(e) {
+        e.preventDefault();
+        const form = document.getElementById('activityForm');
+        const mode = form ? form.getAttribute('data-mode') : 'add';
+        const typeEl = document.getElementById('activityType');
+        const typeCustomEl = document.getElementById('activityTypeCustom');
+        const descEl = document.getElementById('activityDescription');
+        const sdEl = document.getElementById('activityStartDate');
+        const stEl = document.getElementById('activityStartTime');
+        const edEl = document.getElementById('activityEndDate');
+        const etEl = document.getElementById('activityEndTime');
+        const addrEl = document.getElementById('activityAddress');
+        const statusEl = document.getElementById('activityStatus');
+        const audC = document.getElementById('audContestants');
+        const audJ = document.getElementById('audJudges');
+        if (!typeEl || !sdEl || !stEl || !edEl || !etEl || !statusEl || !addrEl) return;
+        const typeVal = (typeEl.value === 'Custom' ? (typeCustomEl ? typeCustomEl.value.trim() : '') : typeEl.value);
+        const warn = document.getElementById('activityConflictWarning');
+        const fieldsToCheck = [
+            { el: typeEl, valid: !!typeEl.value },
+            { el: typeCustomEl, valid: typeEl.value !== 'Custom' ? true : !!(typeCustomEl && typeCustomEl.value.trim()) },
+            { el: sdEl, valid: !!sdEl.value },
+            { el: stEl, valid: !!stEl.value },
+            { el: edEl, valid: !!edEl.value },
+            { el: etEl, valid: !!etEl.value },
+            { el: addrEl, valid: !!addrEl.value.trim() },
+            { el: statusEl, valid: !!statusEl.value }
+        ];
+        let firstInvalid = null;
+        fieldsToCheck.forEach(f => {
+            if (!f.el) return;
+            const invalid = !f.valid;
+            this.setFieldInvalid(f.el, invalid);
+            if (invalid && !firstInvalid) firstInvalid = f.el;
+        });
+        if (firstInvalid) {
+            if (warn) { warn.textContent = 'Please complete all fields highlighted in red.'; warn.style.display = ''; }
+            firstInvalid.focus();
+            return;
+        }
+        const start = new Date(`${sdEl.value}T${stEl.value}`);
+        const end = new Date(`${edEl.value}T${etEl.value}`);
+        if (end.getTime() <= start.getTime()) {
+            this.setFieldInvalid(etEl, true);
+            if (warn) { warn.textContent = 'End time must be after start time.'; warn.style.display = ''; }
+            return;
+        }
+        if (!(sdEl.value && stEl.value && edEl.value && etEl.value)) return;
+        const event = this.state.activeEvent;
+        const key = this.getActivitiesKey(event && event.id ? event.id : 'default');
+        const list = this.loadActivitiesRaw(key);
+        const sameDay = (a, b) => {
+            const da = new Date(a);
+            const db = new Date(b);
+            return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate();
+        };
+        const conflicts = list.filter(x => {
+            if (!x.start || !x.end) return false;
+            if (x.type !== typeVal) return false;
+            if (!sameDay(x.start, start)) return false;
+            const xs = new Date(x.start).getTime();
+            const xe = new Date(x.end).getTime();
+            const ns = start.getTime();
+            const ne = end.getTime();
+            return ns < xe && ne > xs;
+        });
+        if (conflicts.length > 0) {
+            const names = conflicts.slice(0,3).map(o => o.title).join(', ');
+            const extra = conflicts.length > 3 ? ', ...' : '';
+            const msg = `Scheduling conflict detected with ${names}${extra}. Proceed anyway?`;
+            const proceed = window.confirm(msg);
+            if (!proceed) {
+                if (warn) { warn.textContent = 'Scheduling conflict detected. Please edit the schedule.'; warn.style.display = ''; }
+                return;
+            }
+        }
+        if (warn) { warn.textContent = ''; warn.style.display = 'none'; }
+        if (mode === 'add') {
+            const id = 'activity_' + Date.now();
+            const obj = {
+                id,
+                title: typeVal,
+                type: typeVal,
+                description: descEl ? descEl.value.trim() : '',
+                start: start.toISOString(),
+                end: end.toISOString(),
+                venue: '',
+                address: addrEl ? addrEl.value.trim() : '',
+                status: statusEl.value,
+                audience: { contestants: !!(audC && audC.checked), judges: !!(audJ && audJ.checked) },
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                event_id: event && event.id ? event.id : 'event_default'
+            };
+            if (typeEl.value === 'Custom' && !obj.type) return;
+            list.push(obj);
+        } else {
+            const editId = this.state.editActivityId;
+            const obj = list.find(a => a.id === editId);
+            if (!obj) return;
+            obj.title = typeVal;
+            obj.type = typeVal;
+            if (typeEl.value === 'Custom' && !obj.type) return;
+            obj.description = descEl ? descEl.value.trim() : '';
+            obj.start = start.toISOString();
+            obj.end = end.toISOString();
+            obj.venue = '';
+            obj.address = addrEl ? addrEl.value.trim() : '';
+            obj.status = statusEl.value;
+            obj.audience = { contestants: !!(audC && audC.checked), judges: !!(audJ && audJ.checked) };
+            obj.updated_at = new Date().toISOString();
+        }
+        localStorage.setItem(key, JSON.stringify(list));
+        this.closeActivityModal();
+        this.loadAndRenderActivities();
+    },
+
+    setFieldInvalid(el, invalid) {
+        if (!el) return;
+        if (invalid) {
+            el.classList.add('invalid');
+            el.setAttribute('aria-invalid', 'true');
+        } else {
+            el.classList.remove('invalid');
+            el.removeAttribute('aria-invalid');
+        }
+    },
+
+    updateConflictWarning() {
+        const sdEl = document.getElementById('activityStartDate');
+        const stEl = document.getElementById('activityStartTime');
+        const edEl = document.getElementById('activityEndDate');
+        const etEl = document.getElementById('activityEndTime');
+        const venueEl = document.getElementById('activityVenue');
+        const warn = document.getElementById('activityConflictWarning');
+        if (!sdEl || !stEl || !edEl || !etEl || !warn) return;
+        if (!(sdEl.value && stEl.value && edEl.value && etEl.value)) {
+            warn.textContent = '';
+            warn.style.display = 'none';
+            return;
+        }
+        const start = new Date(`${sdEl.value}T${stEl.value}`);
+        const end = new Date(`${edEl.value}T${etEl.value}`);
+        const event = this.state.activeEvent;
+        const key = this.getActivitiesKey(event && event.id ? event.id : 'default');
+        const list = this.loadActivitiesRaw(key);
+        const currentId = this.state.editActivityId || null;
+        const overlaps = list.filter(x => {
+            if (currentId && x.id === currentId) return false;
+            if (!x.start || !x.end) return false;
+            const xs = new Date(x.start).getTime();
+            const xe = new Date(x.end).getTime();
+            const ns = start.getTime();
+            const ne = end.getTime();
+            return ns < xe && ne > xs;
+        });
+        if (overlaps.length === 0) {
+            warn.textContent = '';
+            warn.style.display = 'none';
+            return;
+        }
+        const sameVenue = venueEl && venueEl.value ? overlaps.filter(o => (o.venue||'').trim().toLowerCase() === venueEl.value.trim().toLowerCase()) : [];
+        const names = overlaps.slice(0,3).map(o => o.title).join(', ');
+        const extra = overlaps.length > 3 ? ', ...' : '';
+        const venueMsg = sameVenue.length > 0 ? ` Same venue: ${sameVenue.slice(0,3).map(o=>o.title).join(', ')}${sameVenue.length>3? ', ...':''}.` : '';
+        warn.textContent = `Potential conflict: overlaps with ${names}${extra}.${venueMsg}`;
+        warn.style.display = '';
+    },
+
+    toggleCustomType() {
+        const typeSel = document.getElementById('activityType');
+        const wrapper = document.getElementById('activityTypeCustomWrapper');
+        if (!typeSel || !wrapper) return;
+        wrapper.style.display = typeSel.value === 'Custom' ? '' : 'none';
+    },
+
+    openEditActivity(id) {
+        const event = this.state.activeEvent;
+        const key = this.getActivitiesKey(event && event.id ? event.id : 'default');
+        const list = this.loadActivitiesRaw(key);
+        const obj = list.find(a => a.id === id);
+        if (!obj) return;
+        this.setActivityModalEdit(obj);
+        const modal = document.getElementById('activityModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        const typeSel = document.getElementById('activityType');
+        if (typeSel) typeSel.focus();
+        this.updateConflictWarning();
+    },
+
+    setActivityModalAdd() {
+        this.state.editActivityId = null;
+        const title = document.getElementById('activityModalTitle');
+        const form = document.getElementById('activityForm');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        if (title) title.textContent = 'Add Activity';
+        if (form) form.setAttribute('data-mode', 'add');
+        if (submitBtn) submitBtn.textContent = 'Save Activity';
+        const f = {
+            type: document.getElementById('activityType'),
+            typeCustom: document.getElementById('activityTypeCustom'),
+            typeCustomWrapper: document.getElementById('activityTypeCustomWrapper'),
+            desc: document.getElementById('activityDescription'),
+            sd: document.getElementById('activityStartDate'),
+            st: document.getElementById('activityStartTime'),
+            ed: document.getElementById('activityEndDate'),
+            et: document.getElementById('activityEndTime'),
+            addr: document.getElementById('activityAddress'),
+            status: document.getElementById('activityStatus'),
+            audC: document.getElementById('audContestants'),
+            audJ: document.getElementById('audJudges')
+        };
+        if (f.type) f.type.value = '';
+        if (f.typeCustom) f.typeCustom.value = '';
+        if (f.typeCustomWrapper) f.typeCustomWrapper.style.display = 'none';
+        if (f.desc) f.desc.value = '';
+        if (f.sd) f.sd.value = '';
+        if (f.st) f.st.value = '';
+        if (f.ed) f.ed.value = '';
+        if (f.et) f.et.value = '';
+        if (f.addr) f.addr.value = '';
+        if (f.status) f.status.value = 'Planned';
+        if (f.audC) f.audC.checked = false;
+        if (f.audJ) f.audJ.checked = false;
+    },
+
+    setActivityModalEdit(obj) {
+        this.state.editActivityId = obj.id;
+        const title = document.getElementById('activityModalTitle');
+        const form = document.getElementById('activityForm');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        if (title) title.textContent = 'Edit Activity';
+        if (form) form.setAttribute('data-mode', 'edit');
+        if (submitBtn) submitBtn.textContent = 'Save Changes';
+        const f = {
+            type: document.getElementById('activityType'),
+            typeCustom: document.getElementById('activityTypeCustom'),
+            typeCustomWrapper: document.getElementById('activityTypeCustomWrapper'),
+            desc: document.getElementById('activityDescription'),
+            sd: document.getElementById('activityStartDate'),
+            st: document.getElementById('activityStartTime'),
+            ed: document.getElementById('activityEndDate'),
+            et: document.getElementById('activityEndTime'),
+            addr: document.getElementById('activityAddress'),
+            status: document.getElementById('activityStatus'),
+            audC: document.getElementById('audContestants'),
+            audJ: document.getElementById('audJudges')
+        };
+        const predefined = ['Photoshoot','Rehearsal','Briefing','Dinner','Main Event','Custom'];
+        if (f.type) {
+            if (predefined.includes(obj.type)) {
+                f.type.value = obj.type;
+                if (f.typeCustomWrapper) f.typeCustomWrapper.style.display = obj.type === 'Custom' ? '' : 'none';
+                if (f.typeCustom) f.typeCustom.value = '';
+            } else {
+                f.type.value = 'Custom';
+                if (f.typeCustomWrapper) f.typeCustomWrapper.style.display = '';
+                if (f.typeCustom) f.typeCustom.value = obj.type || '';
+            }
+        }
+        if (f.desc) f.desc.value = obj.description || '';
+        const s = obj.start ? new Date(obj.start) : null;
+        const e = obj.end ? new Date(obj.end) : null;
+        const pad2 = (n) => (n<10?('0'+n):''+n);
+        if (s && f.sd) f.sd.value = `${s.getFullYear()}-${pad2(s.getMonth()+1)}-${pad2(s.getDate())}`;
+        if (s && f.st) f.st.value = `${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
+        if (e && f.ed) f.ed.value = `${e.getFullYear()}-${pad2(e.getMonth()+1)}-${pad2(e.getDate())}`;
+        if (e && f.et) f.et.value = `${pad2(e.getHours())}:${pad2(e.getMinutes())}`;
+        if (f.addr) f.addr.value = obj.address || '';
+        if (f.status) f.status.value = obj.status || 'Planned';
+        if (f.audC) f.audC.checked = !!(obj.audience && obj.audience.contestants);
+        if (f.audJ) f.audJ.checked = !!(obj.audience && obj.audience.judges);
     },
 
     renderManageOrganizersView() {
@@ -1622,11 +2249,7 @@ const EventManagerDashboard = {
             this.elements.settingsButton.classList.add('active');
         }
         
-        // Show other view for settings
-        this.showOtherView('settings');
-        
-        console.log('Settings clicked');
-        // TODO: Load settings page/content
+        this.renderSectionView('Settings', 'Manage application settings');
     },
 
     /**
