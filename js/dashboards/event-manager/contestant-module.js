@@ -14,6 +14,8 @@ window.ContestantModule = {
         this.photoInput = this.view.querySelector('#photo');
         this.imagePreview = this.view.querySelector('#imagePreview');
         this.contestantsTbody = this.view.querySelector('#contestantsTbody');
+        this.searchEl = this.view.querySelector('#contestantSearch');
+        this.filterStatusEl = this.view.querySelector('#filterContestantStatus');
     },
 
     attachEventListeners() {
@@ -65,6 +67,13 @@ window.ContestantModule = {
                     return;
                 }
             });
+        }
+
+        if (this.searchEl) {
+            this.searchEl.addEventListener('input', () => this.renderContestantsTable());
+        }
+        if (this.filterStatusEl) {
+            this.filterStatusEl.addEventListener('change', () => this.renderContestantsTable());
         }
     },
 
@@ -186,7 +195,15 @@ window.ContestantModule = {
     renderContestantsTable() {
         const tbody = this.contestantsTbody;
         if (!tbody) return;
-        const list = this.loadContestants();
+        let list = this.loadContestants();
+        const s = (this.searchEl?.value || '').toLowerCase();
+        const st = this.filterStatusEl?.value || '';
+        if (s) {
+            list = list.filter(c => ((c.firstName||'') + ' ' + (c.lastName||'')).toLowerCase().includes(s) || (c.email||'').toLowerCase().includes(s));
+        }
+        if (st) {
+            list = list.filter(c => (c.status||'active') === st);
+        }
         if (!list || list.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><div class="empty-state-text">No contestants registered yet</div></td></tr>';
             return;
