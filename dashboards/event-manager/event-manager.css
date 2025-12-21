@@ -708,6 +708,10 @@ body {
     flex-direction: column;
 }
 
+.round-modal .modal-content {
+    max-width: 640px;
+}
+
 .form-row-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

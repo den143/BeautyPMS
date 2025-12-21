@@ -1065,7 +1065,7 @@ const EventManagerDashboard = {
                 this.renderManageActivitiesView();
                 break;
             case 'manage-rounds':
-                this.renderSectionView('Manage Rounds', 'Configure competition rounds');
+                this.renderManageRoundsView();
                 break;
             case 'manage-segments':
                 this.renderSectionView('Manage Segments and Criteria', 'Define segments and scoring criteria');
@@ -1298,6 +1298,373 @@ const EventManagerDashboard = {
         this.elements.otherViews.innerHTML = html;
         this.attachManageActivitiesHandlers();
         this.loadAndRenderActivities();
+    },
+
+    renderManageRoundsView() {
+        if (!this.elements.otherViews) return;
+        this.showOtherView('manage-rounds');
+        const html = `
+            <section id="manageRoundsView" class="dashboard-view">
+              <div class="page-header">
+                <div>
+                  <h1 class="event-title">Manage Rounds</h1>
+                  <p class="page-subtitle">Configure competition rounds</p>
+                </div>
+                <button id="createRoundBtn" class="submit-button">Create Round</button>
+              </div>
+
+              <div class="recent-registrations-card">
+                <h2 class="section-title">Rounds</h2>
+                <div id="roundsContainer">
+                  <div class="empty-state">
+                    <div class="empty-state-text">No rounds yet</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <div id="roundModal" class="modal round-modal hidden" role="dialog" aria-labelledby="roundModalTitle" aria-hidden="true">
+              <div class="modal-overlay"></div>
+              <div class="modal-content">
+                <h3 id="roundModalTitle" class="modal-title">Create Round</h3>
+                <div id="roundError" class="error-message" style="display:none"></div>
+                <form id="roundForm" class="modal-form" novalidate>
+                  <div class="modal-body">
+                    <div class="form-group">
+                      <label for="roundName" class="form-label">Round Name</label>
+                      <div class="input-wrapper">
+                        <input id="roundName" type="text" class="form-input" placeholder="e.g., Swimsuit" required>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="roundDescription" class="form-label">Description (optional)</label>
+                      <div class="input-wrapper">
+                        <textarea id="roundDescription" class="form-input" placeholder="Notes or instructions" rows="3"></textarea>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="roundOrder" class="form-label">Round Order</label>
+                      <div class="input-wrapper">
+                        <input id="roundOrder" type="number" min="1" step="1" class="form-input" placeholder="e.g., 1" required>
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label for="advRule" class="form-label">Advancement Rule</label>
+                      <div class="input-wrapper">
+                        <select id="advRule" class="form-input form-select" required>
+                          <option value="">Select rule</option>
+                          <option value="TopN">Top N Contestants</option>
+                          <option value="Final">Final Round (1)</option>
+                        </select>
+                      </div>
+                      <div class="input-wrapper" id="topNWrapper" style="margin-top:0.5rem; display:none">
+                        <input id="topNCount" type="number" min="1" step="1" class="form-input" placeholder="Enter N (e.g., 5)">
+                      </div>
+                    </div>
+
+                    <div class="form-group">
+                      <label class="form-label">Enable Audience Voting</label>
+                      <div class="input-wrapper">
+                        <label><input id="audienceVoting" type="checkbox"> Audience contributes 20%, judges 80%</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="modal-actions">
+                    <button type="button" id="cancelRound" class="submit-button secondary-button">Cancel</button>
+                    <button type="submit" class="submit-button">Create Round</button>
+                  </div>
+                </form>
+              </div>
+            </div>`;
+        this.elements.otherViews.innerHTML = html;
+        this.attachManageRoundsHandlers();
+        this.renderRoundsList();
+    },
+
+    attachManageRoundsHandlers() {
+        const btn = document.getElementById('createRoundBtn');
+        const modal = document.getElementById('roundModal');
+        const overlay = modal ? modal.querySelector('.modal-overlay') : null;
+        const cancelBtn = document.getElementById('cancelRound');
+        const form = document.getElementById('roundForm');
+        const ruleSel = document.getElementById('advRule');
+        if (btn) btn.addEventListener('click', () => this.openRoundModal());
+        if (overlay) overlay.addEventListener('click', () => this.closeRoundModal());
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeRoundModal());
+        if (form) form.addEventListener('submit', (e) => this.handleRoundSubmit(e));
+        if (ruleSel) ruleSel.addEventListener('change', () => this.toggleTopN());
+        const container = document.getElementById('roundsContainer');
+        if (container) container.addEventListener('click', (e) => this.handleRoundsTableClick(e));
+    },
+
+    openRoundModal() {
+        const modal = document.getElementById('roundModal');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        const nameEl = document.getElementById('roundName');
+        if (nameEl) nameEl.focus();
+    },
+
+    closeRoundModal() {
+        const modal = document.getElementById('roundModal');
+        if (!modal) return;
+        modal.classList.add('hidden');
+        modal.setAttribute('aria-hidden', 'true');
+        const form = document.getElementById('roundForm');
+        if (form) form.reset();
+        const err = document.getElementById('roundError');
+        if (err) { err.style.display = 'none'; err.textContent = ''; }
+        const topN = document.getElementById('topNWrapper');
+        if (topN) topN.style.display = 'none';
+        ['roundName','roundOrder','advRule','topNCount'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) this.setFieldInvalid(el, false);
+        });
+    },
+
+    setRoundModalAdd() {
+        const title = document.getElementById('roundModalTitle');
+        const form = document.getElementById('roundForm');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        if (title) title.textContent = 'Create Round';
+        if (form) form.setAttribute('data-mode', 'add');
+        if (submitBtn) submitBtn.textContent = 'Create Round';
+        const f = {
+            name: document.getElementById('roundName'),
+            desc: document.getElementById('roundDescription'),
+            order: document.getElementById('roundOrder'),
+            rule: document.getElementById('advRule'),
+            topN: document.getElementById('topNCount'),
+            topNWrapper: document.getElementById('topNWrapper'),
+            aud: document.getElementById('audienceVoting')
+        };
+        if (f.name) f.name.value = '';
+        if (f.desc) f.desc.value = '';
+        if (f.order) f.order.value = '';
+        if (f.rule) f.rule.value = '';
+        if (f.topN) f.topN.value = '';
+        if (f.topNWrapper) f.topNWrapper.style.display = 'none';
+        if (f.aud) f.aud.checked = false;
+    },
+
+    setRoundModalEdit(obj) {
+        const title = document.getElementById('roundModalTitle');
+        const form = document.getElementById('roundForm');
+        const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+        if (title) title.textContent = 'Edit Round';
+        if (form) form.setAttribute('data-mode', 'edit');
+        if (submitBtn) submitBtn.textContent = 'Save Changes';
+        const f = {
+            name: document.getElementById('roundName'),
+            desc: document.getElementById('roundDescription'),
+            order: document.getElementById('roundOrder'),
+            rule: document.getElementById('advRule'),
+            topN: document.getElementById('topNCount'),
+            topNWrapper: document.getElementById('topNWrapper'),
+            aud: document.getElementById('audienceVoting')
+        };
+        if (f.name) f.name.value = obj.name || '';
+        if (f.desc) f.desc.value = obj.description || '';
+        if (f.order) f.order.value = obj.order || '';
+        if (f.rule) f.rule.value = obj.advancement_rule || '';
+        const isTopN = obj.advancement_rule === 'TopN';
+        if (f.topNWrapper) f.topNWrapper.style.display = isTopN ? '' : 'none';
+        if (f.topN) f.topN.value = isTopN ? (obj.top_n || 1) : '';
+        if (f.aud) f.aud.checked = !!obj.audience_voting;
+    },
+
+    openRoundEditModal(id) {
+        const event = this.state.activeEvent;
+        const key = this.getRoundsKey(event && event.id ? event.id : 'default');
+        const list = this.loadRoundsRaw(key);
+        const obj = list.find(r => r.id === id);
+        if (!obj) return;
+        const modal = document.getElementById('roundModal');
+        if (!modal) return;
+        this.setRoundModalEdit(obj);
+        modal.classList.remove('hidden');
+        modal.setAttribute('aria-hidden', 'false');
+        const nameEl = document.getElementById('roundName');
+        if (nameEl) nameEl.focus();
+    },
+
+    handleRoundsTableClick(e) {
+        const btn = e.target.closest('button');
+        const row = e.target.closest('tr');
+        if (!row || !btn) return;
+        const id = row.getAttribute('data-id');
+        const action = btn.getAttribute('data-action');
+        if (action === 'edit') this.openRoundEditModal(id);
+        else if (action === 'toggle-lock') this.toggleRoundLock(id);
+    },
+
+    toggleRoundLock(id) {
+        const event = this.state.activeEvent;
+        const key = this.getRoundsKey(event && event.id ? event.id : 'default');
+        const list = this.loadRoundsRaw(key);
+        const r = list.find(x => x.id === id);
+        if (!r) return;
+        r.status = (r.status === 'Locked') ? 'Draft' : 'Locked';
+        r.updated_at = new Date().toISOString();
+        localStorage.setItem(key, JSON.stringify(list));
+        this.renderRoundsList();
+    },
+
+    toggleTopN() {
+        const ruleSel = document.getElementById('advRule');
+        const wrapper = document.getElementById('topNWrapper');
+        if (!ruleSel || !wrapper) return;
+        wrapper.style.display = ruleSel.value === 'TopN' ? '' : 'none';
+        const input = document.getElementById('topNCount');
+        if (input) this.setFieldInvalid(input, false);
+    },
+
+    handleRoundSubmit(e) {
+        e.preventDefault();
+        const nameEl = document.getElementById('roundName');
+        const descEl = document.getElementById('roundDescription');
+        const orderEl = document.getElementById('roundOrder');
+        const ruleSel = document.getElementById('advRule');
+        const topNEl = document.getElementById('topNCount');
+        const audienceEl = document.getElementById('audienceVoting');
+        const err = document.getElementById('roundError');
+        if (!nameEl || !orderEl || !ruleSel) return;
+        const fields = [
+            { el: nameEl, valid: !!nameEl.value.trim() },
+            { el: orderEl, valid: !!orderEl.value && parseInt(orderEl.value,10) > 0 },
+            { el: ruleSel, valid: !!ruleSel.value },
+            { el: topNEl, valid: ruleSel.value !== 'TopN' ? true : !!(topNEl && parseInt(topNEl.value,10) > 0) }
+        ];
+        let firstInvalid = null;
+        fields.forEach(f => {
+            if (!f.el) return;
+            const invalid = !f.valid;
+            this.setFieldInvalid(f.el, invalid);
+            if (invalid && !firstInvalid) firstInvalid = f.el;
+        });
+        if (firstInvalid) {
+            if (err) { err.textContent = 'Please complete all required fields.'; err.style.display = ''; }
+            firstInvalid.focus();
+            return;
+        }
+        const event = this.state.activeEvent;
+        const key = this.getRoundsKey(event && event.id ? event.id : 'default');
+        const list = this.loadRoundsRaw(key);
+        const obj = {
+            id: 'round_' + Date.now(),
+            name: nameEl.value.trim(),
+            description: descEl ? descEl.value.trim() : '',
+            order: parseInt(orderEl.value,10),
+            advancement_rule: ruleSel.value,
+            top_n: ruleSel.value === 'TopN' ? parseInt(topNEl.value,10) : 1,
+            audience_voting: !!(audienceEl && audienceEl.checked),
+            weights: !!(audienceEl && audienceEl.checked) ? { judge: 0.8, audience: 0.2 } : { judge: 1, audience: 0 },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            event_id: event && event.id ? event.id : 'event_default'
+        };
+        list.push(obj);
+        localStorage.setItem(key, JSON.stringify(list));
+        this.closeRoundModal();
+        this.renderRoundsList();
+    },
+
+    getRoundsKey(eventId) {
+        return 'bpms_rounds_' + eventId;
+    },
+
+    renderRoundsList() {
+        const event = this.state.activeEvent;
+        const key = this.getRoundsKey(event && event.id ? event.id : 'default');
+        const list = this.loadRoundsRaw(key);
+        const container = document.getElementById('roundsContainer');
+        if (!container) return;
+        if (!list || list.length === 0) {
+            container.innerHTML = `<div class="empty-state"><div class="empty-state-text">No rounds yet</div></div>`;
+            return;
+        }
+        const rows = list
+            .sort((a,b) => a.order - b.order)
+            .map(r => {
+                const adv = r.advancement_rule === 'TopN' ? `Top ${r.top_n}` : 'Final (1)';
+                const aud = r.audience_voting ? 'Enabled' : 'Disabled';
+                const statusClass = r.status === 'Locked' ? 'approved' : (r.status === 'Draft' ? 'pending' : 'approved');
+                const statusBadge = `<span class="status-badge ${statusClass}">${r.status||'Draft'}</span>`;
+                const lockLabel = r.status === 'Locked' ? 'Unlock' : 'Lock';
+                return `<tr data-id="${r.id}">
+                  <td>${r.name}</td>
+                  <td>${r.order}</td>
+                  <td>${adv}</td>
+                  <td>${aud}</td>
+                  <td>${statusBadge}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button class="table-action-btn view" data-action="edit">Edit</button>
+                      <button class="table-action-btn view" data-action="toggle-lock">${lockLabel}</button>
+                    </div>
+                  </td>
+                </tr>`;
+            }).join('');
+        container.innerHTML = `
+          <table class="data-table" id="roundsTable">
+            <thead>
+              <tr>
+                <th>Round name</th>
+                <th>Round Order</th>
+                <th>Advancement Rule</th>
+                <th>Audience Voting</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+    },
+
+    loadRoundsRaw(key) {
+        const raw = localStorage.getItem(key);
+        try { return raw ? JSON.parse(raw) : []; } catch(e) { return []; }
+    },
+
+    loadAndRenderRounds() {
+        const event = this.state.activeEvent;
+        const key = this.getRoundsKey(event && event.id ? event.id : 'default');
+        const list = this.loadRoundsRaw(key);
+        const container = document.getElementById('roundsContainer');
+        if (!container) return;
+        if (!list || list.length === 0) {
+            container.innerHTML = `<div class=\"empty-state\"><div class=\"empty-state-text\">No rounds yet</div></div>`;
+            return;
+        }
+        const rows = list
+            .sort((a,b) => a.order - b.order)
+            .map(r => {
+                const adv = r.advancement_rule === 'TopN' ? `Top ${r.top_n}` : 'Final (1)';
+                const aud = r.audience_voting ? 'Enabled' : 'Disabled';
+                return `<tr>
+                  <td>${r.name}</td>
+                  <td>${r.order}</td>
+                  <td>${adv}</td>
+                  <td>${aud}</td>
+                </tr>`;
+            }).join('');
+        container.innerHTML = `
+          <table class=\"data-table\" id=\"roundsTable\">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Order</th>
+                <th>Advancement</th>
+                <th>Audience Voting</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>`;
     },
 
     attachManageActivitiesHandlers() {
