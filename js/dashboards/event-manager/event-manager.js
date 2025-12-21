@@ -1071,16 +1071,16 @@ const EventManagerDashboard = {
                 this.renderManageSegmentsView();
                 break;
             case 'manage-awards':
-                this.renderManageAwardsView();
+                this.renderSectionView('Manage Awards', 'Create and manage awards');
                 break;
             case 'register-contestant':
-                this.renderSectionView('Register Contestant', 'Add and manage contestants');
+                this.renderRegisterContestantView();
                 break;
             case 'register-judge':
-                this.renderSectionView('Register Judge', 'Add and manage judges');
+                this.renderRegisterJudgeView();
                 break;
             case 'result-panel':
-                this.renderSectionView('Result Panel', 'View results and rankings');
+                this.renderResultPanelView();
                 break;
             default:
                 console.log('Unknown navigation target:', navTarget);
@@ -1132,6 +1132,20 @@ const EventManagerDashboard = {
         this.elements.otherViews.innerHTML = html;
     },
 
+    renderRegisterContestantView() {
+        if (!this.elements.otherViews) return;
+        this.showOtherView('register-contestant');
+        fetch('./register-contestant.html')
+            .then(r => r.text())
+            .then(html => {
+                this.elements.otherViews.innerHTML = html;
+                // Pass the container element because the modal is a sibling of the main view
+                if (window.ContestantModule && typeof window.ContestantModule.init === 'function') {
+                    window.ContestantModule.init(this.elements.otherViews);
+                }
+            });
+    },
+
     renderManageActivitiesView() {
         if (!this.elements.otherViews) return;
         this.showOtherView('manage-activities');
@@ -1178,6 +1192,32 @@ const EventManagerDashboard = {
                 this.elements.otherViews.innerHTML = html;
                 if (window.AwardsModule && typeof window.AwardsModule.initAwardsView === 'function') {
                     window.AwardsModule.initAwardsView(this.state.activeEvent);
+                }
+            });
+    },
+
+    renderResultPanelView() {
+        if (!this.elements.otherViews) return;
+        this.showOtherView('result-panel');
+        fetch('./result-panel.html')
+            .then(r => r.text())
+            .then(html => {
+                this.elements.otherViews.innerHTML = html;
+                if (window.ScoringModule && typeof window.ScoringModule.init === 'function') {
+                    window.ScoringModule.init(this.state.activeEvent ? this.state.activeEvent : null);
+                }
+            });
+    },
+
+    renderRegisterJudgeView() {
+        if (!this.elements.otherViews) return;
+        this.showOtherView('register-judge');
+        fetch('./register-judge.html')
+            .then(r => r.text())
+            .then(html => {
+                this.elements.otherViews.innerHTML = html;
+                if (window.UserManagementModule && typeof window.UserManagementModule.initJudgeView === 'function') {
+                    window.UserManagementModule.initJudgeView(this.state.activeEvent);
                 }
             });
     },
