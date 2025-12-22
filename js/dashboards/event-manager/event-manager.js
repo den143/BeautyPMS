@@ -1054,9 +1054,9 @@ const EventManagerDashboard = {
         
         // Placeholder for future navigation functionality
         // This will be replaced with actual page routing/content loading
-        switch(navTarget) {
+            switch(navTarget) {
             case 'dashboard':
-                // Dashboard view is already shown above
+                this.showDashboard();
                 break;
             case 'manage-organizers':
                 this.renderManageOrganizersView();
@@ -1140,7 +1140,7 @@ const EventManagerDashboard = {
             .then(html => {
                 this.elements.otherViews.innerHTML = html;
                 if (window.ContestantModule && typeof window.ContestantModule.init === 'function') {
-                    window.ContestantModule.init(this.elements.otherViews);
+                    window.ContestantModule.init(this.elements.otherViews, this.state.activeEvent);
                 }
             });
     },
@@ -2384,20 +2384,76 @@ const EventManagerDashboard = {
      */
     handleSettings(e) {
         e.preventDefault();
-        
-        // Remove active class from all nav items
         if (this.elements.navItems && this.elements.navItems.length > 0) {
-            this.elements.navItems.forEach(item => {
-                item.classList.remove('active');
+            this.elements.navItems.forEach(item => { item.classList.remove('active'); });
+        }
+        if (this.elements.settingsButton) { this.elements.settingsButton.classList.add('active'); }
+        this.renderSettingsView();
+    },
+
+    renderSettingsView() {
+        if (!this.elements.otherViews) return;
+        this.showOtherView('settings');
+        fetch('./settings.html')
+            .then(r => r.text())
+            .then(html => {
+                this.elements.otherViews.innerHTML = html;
+                if (window.SettingsModule && typeof window.SettingsModule.initSettingsView === 'function') {
+                    window.SettingsModule.initSettingsView(this.state.activeEvent);
+                }
             });
+    },
+
+    rerenderCurrentView() {
+        const activeNav = Array.from(this.elements.navItems || []).find(item => item.classList.contains('active'));
+        const target = activeNav ? activeNav.getAttribute('data-nav') : 'dashboard';
+        switch (target) {
+            case 'dashboard':
+                this.showDashboard();
+                break;
+            case 'manage-activities':
+                this.renderManageActivitiesView();
+                break;
+            case 'manage-rounds':
+                this.renderManageRoundsView();
+                break;
+            case 'manage-segments':
+                this.renderManageSegmentsView();
+                break;
+            case 'manage-awards':
+                this.renderManageAwardsView();
+                break;
+            case 'register-contestant':
+                this.renderRegisterContestantView();
+                break;
+            case 'register-judge':
+                this.renderRegisterJudgeView();
+                break;
+            case 'manage-organizers':
+                this.renderManageOrganizersView();
+                break;
+            case 'result-panel':
+                this.renderResultPanelView();
+                break;
+            case 'settings':
+                this.renderSettingsView();
+                break;
+            default:
+                this.showDashboard();
         }
-        
-        // Add active class to settings
-        if (this.elements.settingsButton) {
-            this.elements.settingsButton.classList.add('active');
+    },
+
+    setActiveNav(target) {
+        if (this.elements.navItems && this.elements.navItems.length > 0) {
+            this.elements.navItems.forEach(item => item.classList.remove('active'));
+            const item = Array.from(this.elements.navItems).find(x => x.getAttribute('data-nav') === target);
+            if (item) item.classList.add('active');
         }
-        
-        this.renderSectionView('Settings', 'Manage application settings');
+    },
+
+    goToDashboard() {
+        this.setActiveNav('dashboard');
+        this.showDashboard();
     },
 
     /**

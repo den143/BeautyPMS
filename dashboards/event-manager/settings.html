@@ -1,0 +1,160 @@
+<section id="settingsView" class="dashboard-view">
+  <div class="page-header">
+    <div>
+      <h1 class="event-title">Settings</h1>
+      <p class="page-subtitle">Configure your event</p>
+    </div>
+  </div>
+
+  <div class="recent-registrations-card">
+    <h2 class="section-title">Event Configuration</h2>
+    <div class="form-row-grid" style="align-items:flex-end; margin-bottom:0.75rem">
+      <div>
+        <div class="event-detail-item"><span id="settingsEventName">-</span></div>
+        <div class="event-detail-item"><span id="settingsEventDate">-</span> <span id="settingsEventTime" style="margin-left:0.5rem">-</span></div>
+        <div class="event-detail-item"><span id="settingsEventVenue">-</span></div>
+      </div>
+      <div style="justify-self:end">
+        <span class="status-badge pending" id="settingsEventStatusBadge">Draft</span>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:0.5rem; margin-bottom:1rem">
+      <button id="toggleEventActivationBtn" class="submit-button">Activate</button>
+      <button id="editCurrentEventBtn" class="submit-button">Edit Current Event</button>
+      <button id="addNewEventBtn" class="submit-button">Add New Event</button>
+    </div>
+
+    <div id="editEventFormWrapper" style="display:none">
+      <div class="info-message" id="editEventWarning">You are editing the current event while it is in Draft.</div>
+      <form id="editEventForm" class="modal-form" novalidate>
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="editEventName" class="form-label">Event Name</label>
+            <div class="input-wrapper">
+              <input id="editEventName" type="text" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editEventVenue" class="form-label">Venue</label>
+            <div class="input-wrapper">
+              <input id="editEventVenue" type="text" class="form-input" required>
+            </div>
+          </div>
+        </div>
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="editEventDate" class="form-label">Start Date</label>
+            <div class="input-wrapper">
+              <input id="editEventDate" type="date" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editEventTime" class="form-label">Start Time</label>
+            <div class="input-wrapper">
+              <input id="editEventTime" type="time" class="form-input" required>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="submit" class="submit-button">Save Changes</button>
+          <button type="button" id="cancelEditEvent" class="submit-button">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="recent-registrations-card" style="margin-top:1rem">
+    <h2 class="section-title">Event History</h2>
+    <table class="data-table" id="eventsHistoryTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Date</th>
+          <th>Venue</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="eventsHistoryTbody">
+        <tr>
+          <td colspan="5" class="empty-state">
+            <div class="empty-state-text">No previous events</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="recent-registrations-card" style="margin-top:1rem">
+    <h2 class="section-title">Audience & Ticketing</h2>
+    <div class="form-row-grid" style="align-items:flex-end; margin-bottom:0.75rem">
+      <div class="form-group">
+        <label for="ticketCount" class="form-label">Number of Tickets</label>
+        <div class="input-wrapper">
+          <input id="ticketCount" type="number" class="form-input" min="1" value="1">
+        </div>
+      </div>
+      <div style="justify-self:end">
+        <button id="generateTicketsBtn" class="submit-button">Generate Codes</button>
+      </div>
+    </div>
+    <table class="data-table" id="ticketsTable">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Status</th>
+          <th>Used At</th>
+        </tr>
+      </thead>
+      <tbody id="ticketsTbody">
+        <tr>
+          <td colspan="3" class="empty-state">
+            <div class="empty-state-text">No tickets generated</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div id="addEventModal" class="modal hidden" role="dialog" aria-labelledby="addEventModalTitle" aria-hidden="true">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" style="width:min(95vw, 720px); max-width:720px;">
+    <h3 id="addEventModalTitle" class="modal-title">Create New Event</h3>
+    <form id="addEventForm" class="modal-form" novalidate>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="newEventName" class="form-label">Event Name</label>
+          <div class="input-wrapper">
+            <input id="newEventName" type="text" class="form-input" required>
+          </div>
+        </div>
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="newEventDate" class="form-label">Start Date</label>
+            <div class="input-wrapper">
+              <input id="newEventDate" type="date" class="form-input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="newEventTime" class="form-label">Start Time</label>
+            <div class="input-wrapper">
+              <input id="newEventTime" type="time" class="form-input" required>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="newEventVenue" class="form-label">Venue</label>
+          <div class="input-wrapper">
+            <input id="newEventVenue" type="text" class="form-input" required>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="submit-button">Create Event</button>
+        <button type="button" id="cancelAddEvent" class="submit-button">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

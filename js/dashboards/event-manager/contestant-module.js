@@ -1,5 +1,7 @@
 window.ContestantModule = {
-    init(view) {
+    state: { eventId: 'default' },
+    init(view, activeEvent) {
+        this.state.eventId = (activeEvent && activeEvent.id) ? activeEvent.id : 'default';
         this.cacheElements(view);
         this.attachEventListeners();
         this.renderContestantsTable();
@@ -180,7 +182,7 @@ window.ContestantModule = {
         return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
     }
     ,
-    getContestantsKey() { return 'bpms_contestants'; }
+    getContestantsKey() { return 'bpms_contestants_' + this.state.eventId; }
     ,
     loadContestants() {
         let list = [];
