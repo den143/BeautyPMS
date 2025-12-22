@@ -1,0 +1,176 @@
+<section id="manageAwardsView" class="dashboard-view">
+  <div class="page-header">
+    <div>
+      <h1 class="event-title">Manage Awards</h1>
+      <p class="page-subtitle">Create and manage event awards</p>
+    </div>
+    <button id="addAwardBtn" class="submit-button">Add Award</button>
+  </div>
+
+  <div class="filters-bar">
+    <input id="awardSearch" class="form-input" type="text" placeholder="Search awards by name">
+    <select id="filterAwardType" class="form-input form-select">
+      <option value="">All Types</option>
+      <option value="Automatic">Automatic</option>
+      <option value="Manual">Manual</option>
+      <option value="Audience">Audience</option>
+    </select>
+    <select id="filterAwardScope" class="form-input form-select">
+      <option value="">All Scopes</option>
+      <option value="Event">Event</option>
+      <option value="Round">Round</option>
+      <option value="Segment">Segment</option>
+    </select>
+    <select id="filterAwardStatus" class="form-input form-select">
+      <option value="">All Status</option>
+      <option value="Draft">Draft</option>
+      <option value="Ready">Ready</option>
+      <option value="Awarded">Awarded</option>
+      <option value="Deactivated">Deactivated</option>
+    </select>
+  </div>
+
+  <div class="recent-registrations-card">
+    <h2 class="section-title">Awards</h2>
+    <table class="data-table" id="awardsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Scope</th>
+          <th>Rules</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="awardsTbody">
+        <tr>
+          <td colspan="6" class="empty-state">
+            <div class="empty-state-text">No awards yet</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div id="awardModal" class="modal hidden" role="dialog" aria-labelledby="awardModalTitle" aria-hidden="true">
+  <div class="modal-overlay"></div>
+  <div class="modal-content" style="width:min(95vw, 900px); max-width:900px; height:85vh; max-height:85vh; display:flex; flex-direction:column; overflow-y:auto;">
+    <h3 id="awardModalTitle" class="modal-title">Add Award</h3>
+    <div id="awardError" class="error-message" style="display:none"></div>
+    <form id="awardForm" class="modal-form" novalidate>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="awardName" class="form-label">Award Name</label>
+          <div class="input-wrapper">
+            <input id="awardName" type="text" class="form-input" placeholder="e.g., Best in Evening Gown" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="awardDescription" class="form-label">Description</label>
+          <div class="input-wrapper">
+            <textarea id="awardDescription" class="form-input" placeholder="Short description (optional)"></textarea>
+          </div>
+        </div>
+
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label for="awardType" class="form-label">Award Type</label>
+            <div class="input-wrapper">
+              <select id="awardType" class="form-input form-select" required>
+                <option value="">Select type</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+                <option value="Audience">Audience</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="awardScope" class="form-label">Scope</label>
+            <div class="input-wrapper">
+              <select id="awardScope" class="form-input form-select" required>
+                <option value="">Select scope</option>
+                <option value="Event">Event</option>
+                <option value="Round">Round</option>
+                <option value="Segment">Segment</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="scopeSelectors" style="display:none">
+          <div id="roundSelectorWrapper" class="form-group">
+            <label for="awardRound" class="form-label">Round</label>
+            <div class="input-wrapper">
+              <select id="awardRound" class="form-input form-select">
+                <option value="">Select round</option>
+              </select>
+            </div>
+          </div>
+          <div id="segmentSelectorWrapper" class="form-group" style="display:none">
+            <label for="awardSegment" class="form-label">Segment</label>
+            <div class="input-wrapper">
+              <select id="awardSegment" class="form-input form-select">
+                <option value="">Select segment</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="automaticSettings" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Tie Handling</label>
+            <div class="input-wrapper">
+              <label style="display:flex; align-items:center; gap:0.5rem">
+                <input type="checkbox" id="autoAllowMultiple"> Allow multiple winners on tie
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="audienceSettings" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Tie Handling</label>
+            <div class="input-wrapper">
+              <label style="display:flex; align-items:center; gap:0.5rem">
+                <input type="checkbox" id="audAllowMultiple"> Allow multiple winners on tie
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="manualSettings" style="display:none">
+          <div class="form-group">
+            <label for="manualWinners" class="form-label">Select Winners</label>
+            <div class="input-wrapper">
+              <select id="manualWinners" class="form-input form-select" multiple></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="manualJustification" class="form-label">Justification</label>
+            <div class="input-wrapper">
+              <textarea id="manualJustification" class="form-input" placeholder="Optional reasoning for manual selection"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="submit-button">Save Award</button>
+        <button type="button" id="cancelAward" class="submit-button">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="awardWinnersModal" class="modal hidden" role="dialog" aria-labelledby="awardWinnersTitle" aria-hidden="true">
+  <div class="modal-overlay"></div>
+  <div class="modal-content">
+    <h3 id="awardWinnersTitle" class="modal-title">Award Winners</h3>
+    <div id="awardWinnersBody" class="modal-form"></div>
+    <div class="modal-actions">
+      <button type="button" id="closeWinners" class="submit-button">Close</button>
+    </div>
+  </div>
+  </div>
